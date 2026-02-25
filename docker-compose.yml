@@ -1,0 +1,104 @@
+# =============================================================================
+# docker-compose.yml — Full Stack Development & Deployment
+# =============================================================================
+#
+# Services:
+#   api      → FastAPI backend (the AgentFlow orchestrator)
+#   chromadb → Vector database for agent memory
+#
+# WHY DOCKER COMPOSE OVER PLAIN DOCKER:
+#   Compose manages service dependencies (api waits for chromadb),
+#   shared networks, volume persistence, and env var injection.
+#   One command spins up the entire stack: `docker compose up`
+#
+# Usage:
+#   docker compose up --build          # First run (builds images)
+#   docker compose up -d               # Detached (background) mode
+#   docker compose logs -f api         # Stream API logs
+#   docker compose down -v             # Tear down + remove volumes
+# =============================================================================
+
+version: "3.9"
+
+services:
+
+  # ── AgentFlow API ───────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime              # Use the production runtime stage
+    container_name: agentflow_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env                       # All secrets from .env file
+    environment:
+      # Override service hostnames for Docker networking
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8001
+    volumes:
+      # Dev hot-reload: mount source code so changes reflect without rebuild
+      # Comment this out for production builds
+      - .:/app
+    depends_on:
+      chromadb:
+        condition: service_healthy  # Wait until ChromaDB passes its health check
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import httpx; httpx.get('http://localhost:8000/api/v1/health/live').raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - agentflow_network
+    labels:
+      - "com.agentflow.service=api"
+      - "com.agentflow.version=1.0.0"
+
+  # ── ChromaDB Vector Store ───────────────────────────────────────────────────
+  chromadb:
+    image: chromadb/chroma:0.6.0
+    container_name: agentflow_chromadb
+    ports:
+      - "8001:8000"               # Map container 8000 → host 8001 (avoid conflict)
+    environment:
+      - IS_PERSISTENT=TRUE        # Persist data between restarts
+      - ANONYMIZED_TELEMETRY=FALSE
+      - CHROMA_SERVER_AUTHN_CREDENTIALS_FILE=/chroma/auth/credentials.json
+    volumes:
+      - chroma_data:/chroma/chroma  # Named volume: data persists across `docker compose down`
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - agentflow_network
+    labels:
+      - "com.agentflow.service=chromadb"
+
+# ── Named Volumes ────────────────────────────────────────────────────────────
+# WHY NAMED VOLUMES over bind mounts for data:
+#   Named volumes are managed by Docker and survive container recreation.
+#   Bind mounts (./data:/chroma) tie you to local filesystem paths,
+#   which breaks in CI and cloud deployments.
+volumes:
+  chroma_data:
+    driver: local
+    labels:
+      - "com.agentflow.volume=chroma_data"
+
+# ── Networks ─────────────────────────────────────────────────────────────────
+# WHY A DEDICATED NETWORK:
+#   Services on a custom bridge network can communicate by container name
+#   (api calls chromadb:8000). Default bridge network doesn't support
+#   DNS-based service discovery.
+networks:
+  agentflow_network:
+    driver: bridge
+    name: agentflow_network

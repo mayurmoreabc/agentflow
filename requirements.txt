@@ -1,0 +1,50 @@
+# =============================================================================
+# AgentFlow — Python Dependencies
+# =============================================================================
+# WHY PINNED VERSIONS:
+#   Unpinned deps (fastapi>=0.100) can silently break in CI/CD when a
+#   new release introduces a breaking change. Pinning ensures reproducible
+#   builds across developer machines, CI runners, and production containers.
+#   Use `pip-compile` (pip-tools) to regenerate when upgrading.
+# =============================================================================
+
+# ── Web Framework ─────────────────────────────────────────────────────────────
+fastapi==0.115.5
+uvicorn[standard]==0.32.1          # ASGI server (includes websockets, uvloop)
+pydantic==2.10.2
+pydantic-settings==2.6.1          # BaseSettings with .env support
+
+# ── LangChain Ecosystem ───────────────────────────────────────────────────────
+langchain==0.3.12
+langchain-core==0.3.25
+langchain-openai==0.2.11          # OpenAI LLM + embeddings
+langchain-community==0.3.12       # Community tools (Tavily, etc.)
+langchain-chroma==0.1.4           # LangChain ↔ ChromaDB integration
+langgraph==0.2.59                 # Stateful multi-agent graph framework
+
+# ── Vector Database ───────────────────────────────────────────────────────────
+chromadb==0.6.0                   # Embedded/server vector database
+
+# ── LLM Providers ─────────────────────────────────────────────────────────────
+openai==1.57.4
+anthropic==0.40.0                 # Optional: Claude as fallback LLM
+tiktoken==0.8.0                   # Token counting for context management
+
+# ── Search Tools ──────────────────────────────────────────────────────────────
+tavily-python==0.5.0              # Tavily web search for ResearcherAgent
+
+# ── HTTP & Async ──────────────────────────────────────────────────────────────
+httpx==0.28.1                     # Async HTTP client (used by OpenAI SDK)
+aiofiles==24.1.0                  # Async file I/O
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dotenv==1.0.1              # .env file loading
+tenacity==9.0.0                   # Retry logic with exponential backoff
+structlog==24.4.0                 # Structured logging (JSON output in prod)
+rich==13.9.4                      # Pretty terminal output for dev
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
+httpx==0.28.1                     # TestClient for FastAPI

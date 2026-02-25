@@ -133,7 +133,7 @@ agentflow/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_ID/agentflow.git
+git clone https://github.com/mayurmoreabc/agentflow.git
 cd agentflow
 ```
 
@@ -264,7 +264,7 @@ All configuration is managed via `.env` (see `.env.example`):
 
 ## 📜 License
 
-MIT © [YOUR_GITHUB_ID](https://github.com/YOUR_GITHUB_ID)
+MIT © [mayurmoreabc](https://github.com/mayurmoreabc)
 
 ---
 
