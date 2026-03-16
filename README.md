@@ -1,4 +1,4 @@
-# 🤖 AgentFlow — Enterprise-Grade Autonomous AI Agent Orchestrator
+# 🤖 AgentFlow — AI Agent Orchestrator
 
 <div align="center">
 
